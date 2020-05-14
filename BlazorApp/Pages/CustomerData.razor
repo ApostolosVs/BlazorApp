@@ -1,0 +1,168 @@
+﻿@*The customer page which display all the customers data!!The url is http://localhost/customers*@
+@page "/customers"
+@*The below inject and attribute used for the authentication from identity server!!*@
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize] 
+
+@using BlazorApp.Models
+
+
+
+
+<h1>Customers Data</h1>
+
+<div class="col-md-4">
+    <a href='/customers/add' class="btn btn-primary" role="button"><i class="fa fa-user-plus"></i> Add New Customer</a>
+</div>
+<br />
+@if (customerlist == null)
+{
+    <p><em>Loading....</em></p>
+}
+else
+{
+    <table class='table'>
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Company Name</th>
+                <th>Contact Name</th>
+                <th>Address</th>
+                <th>City</th>
+                <th>Region</th>
+                <th>Postal Code</th>
+                <th>Country</th>
+                <th>Phone</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var cust in customerlist)
+            {
+                <tr>
+                    <td>@cust.Id</td>
+                    <td>@cust.CompanyName</td>
+                    <td>@cust.ContactName</td>
+                    <td>@cust.Address</td>
+                    <td>@cust.City</td>
+                    <td>@cust.Region</td>
+                    <td>@cust.PostalCode</td>
+                    <td>@cust.Country</td>
+                    <td>@cust.Phone</td>
+                    <td>
+                        <a href='/customers/edit/@cust.Id' class="btn btn-outline-dark" role="button"> <i class="fa fa-pencil-square-o"></i> Edit</a>
+                    </td>
+                    <td>
+                        <button class="btn btn-outline-danger" data-toggle="modal" data-target="#deletecustomer"
+                                @onclick="(()=>DeleteConfig(cust.Id))">
+                            <i class="fa fa-trash-o"></i>
+                            Delete
+                        </button>
+
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+<div class="modal fade" id="deletecustomer">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Do you agree to delete the Customer:</h3>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">X</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <tr>
+                        <td>Id</td>
+                        <td>@specific_cust.Id</td>
+                    </tr>
+                    <tr>
+                        <th>Company Name</th>
+                        <td>@specific_cust.CompanyName</td>
+                    </tr>
+                    <tr>
+                        <td>Contact Name</td>
+                        <td>@specific_cust.ContactName</td>
+                    </tr>
+                    <tr>
+                        <td>Address</td>
+                        <td>@specific_cust.Address</td>
+                    </tr>
+                    <tr>
+                        <td>City</td>
+                        <td>@specific_cust.City</td>
+                    </tr>
+                    <tr>
+                        <td>Region</td>
+                        <td>@specific_cust.Region</td>
+                    </tr>
+                    <tr>
+                        <td>Postal Code</td>
+                        <td>@specific_cust.PostalCode</td>
+                    </tr>
+                    <tr>
+                        <td>Country</td>
+                        <td>@specific_cust.Country</td>
+                    </tr>
+                    <tr>
+                        <td>Phone</td>
+                        <td>@specific_cust.Phone</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-danger" @onclick="(async () => await DeleteCustomer(specific_cust.Id))" data-dismiss="modal">Delete</button>
+                <button data-dismiss="modal" class="btn btn-light">Cancel</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+@functions {
+    //Create a list with customer data but now is empty
+    List<Customer> customerlist = new List<Customer>();
+    HttpClient Http = new HttpClient(); //New httpClient obj
+    protected Customer specific_cust = new Customer();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshCustomerList(); //When browse the /customers page call the function RefreshCustomerList
+    }
+
+    private async Task RefreshCustomerList()
+    {
+        //Create and send a Http request which return all the customers from the database!!
+        //I use the completed url or I can use the /api/Customers
+        customerlist = await Http.GetJsonAsync<List<Customer>>("http://localhost:59918/api/Customers");
+        StateHasChanged();
+    }
+
+    //The function that when press the button on line 58 find the speicific customer and display the fields on the section with id deletecustomer 
+    protected void DeleteConfig(string ID)
+    {
+        specific_cust = customerlist.FirstOrDefault(x => x.Id == ID);
+    }
+
+
+    //The function that called when confirm the deletion of this customer!!The function create a delete http request!!
+    protected async Task DeleteCustomer(string customerid)
+    {
+        await Http.DeleteAsync("http://localhost:59918/api/Customers/" + customerid);
+        await RefreshCustomerList(); //Then we call again the RefreshCustomerList
+    }
+
+
+}
+
+

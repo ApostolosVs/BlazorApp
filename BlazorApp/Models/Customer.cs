@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
+//The model for the customer!!
 namespace BlazorApp.Models
 {
     public class Customer
     {
-        public string Id { get; set; }
+       public string Id { get; set; }
         public string CompanyName { get; set; }
         public string ContactName { get; set; }
         public string Address { get; set; }

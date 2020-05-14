@@ -1,0 +1,139 @@
+﻿@*This file used for two functionallities 1) add customer and 2)edit a specific customer *@
+@*For the add customer the url should be .../customers/add and for the edit should be /customers/edit/1 (example 1 is customer id)*@
+
+@page "/customers/add"
+@page "/customers/edit/{customerid}"
+
+@using BlazorApp.Models
+@inject NavigationManager NavigationManager
+
+<h1>@Title Customer</h1>
+<hr />
+
+<EditForm Model="@cust" OnValidSubmit="SaveCustomer">
+    <div class="form-group row">
+        <label class="control-label col-md-12">ID</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind="cust.Id" />
+        </div>
+       
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Company Name</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind="cust.CompanyName" />
+        </div>
+    
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Contact Name</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind="cust.ContactName" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Address</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind="cust.Address" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">City</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind="cust.City" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Region</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind="cust.Region" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Postal Code</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind="cust.PostalCode" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Country</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind="cust.Country" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Phone</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind="cust.Phone" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button class="btn btn-light" @onclick="Cancel">Cancel</button>
+    </div>
+</EditForm>
+
+@functions {
+    //I create a new obj HttpClient in order to use it for the api calls!
+    HttpClient Http = new HttpClient();
+
+    //The customerid should be received from the url as parameter!!
+    [Parameter]
+    public string customerid { get; set; }
+    protected string Title = "Add"; //the default title of the page is add
+    public Customer cust = new Customer(); //Create a customer obj
+
+
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        //If the customerid in the url included that mean that we are in the second functionallity (Edit)
+        if (!string.IsNullOrEmpty(customerid))
+        {
+            Title = "Edit"; //The title now is edit Customer
+            //And send a Httprequest with the specific url in order to receive the data for the specific customer
+            //and display in the above fields 
+            cust = await Http.GetJsonAsync<Customer>("http://localhost:59918/api/Customers/" + customerid);
+        }
+    }
+
+
+    //When the user press the button save (line 72) then we have:
+    protected async Task SaveCustomer()
+    {
+        System.Console.WriteLine("inserted in this function");
+
+        //If url contain a customer id that mean that we have edit request
+        if (string.IsNullOrEmpty(customerid))
+        {
+            if (cust.Id != null) //If the customer id not null then we create http request in order to edit the customer
+            {
+                await Http.SendJsonAsync(HttpMethod.Post, "http://localhost:59918/api/Customers/", cust);
+            }
+            else
+            {
+                Cancel(); //If the customer id is null then we call the function cancel
+            }
+
+        }
+        else //but if the url not contained id that mean tha we refer to new customer an create them.
+        {
+            //Http put request in order to create the new customer
+            await Http.SendJsonAsync(HttpMethod.Put, "http://localhost:59918/api/Customers/" + customerid, cust);
+        }
+        Cancel(); //Then call the cancel function
+    }
+
+
+
+    //Cancel function
+    public void Cancel()
+    {
+        NavigationManager.NavigateTo("Customers"); //Redirect to Customers page!!
+    }
+
+
+
+
+}
