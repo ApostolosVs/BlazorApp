@@ -1,8 +1,9 @@
 ﻿@*The customer page which display all the customers data!!The url is http://localhost/customers*@
 @page "/customers"
+@page "/customers/{paginationid}"
 @*The below inject and attribute used for the authentication from identity server!!*@
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@attribute [Authorize] 
+@attribute [Authorize]
 
 @using BlazorApp.Models
 
@@ -15,7 +16,7 @@
     <a href='/customers/add' class="btn btn-primary" role="button"><i class="fa fa-user-plus"></i> Add New Customer</a>
 </div>
 <br />
-@if (customerlist == null)
+@if (pageList == null)
 {
     <p><em>Loading....</em></p>
 }
@@ -38,7 +39,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var cust in customerlist)
+            @foreach (var cust in pageList)
             {
                 <tr>
                     <td>@cust.Id</td>
@@ -67,6 +68,43 @@ else
     </table>
 }
 
+<nav aria-label="Page navigation ">
+    <ul class="pagination">
+
+        <li class="page-item"><a class="page-link"  @onclick="(async () => await PreviousPage())">Previous</a></li>
+        @if (totalpages > 1)
+        {
+            @for (var i = 1; i <= totalpages; i++)
+            {
+
+                <li class="page-item"><a class="page-link" >@i</a></li>
+
+            }
+        }
+        else
+        {
+            <li class="page-item"><a class="page-link" href="#">@totalpages</a></li>
+        }
+        <li class="page-item"><a class="page-link"  @onclick="(async () => await NextPage())">Next</a></li>
+    </ul>
+</nav>
+<nav aria-label="Page navigation ">
+    <ul class="pagination">
+        <li>
+            <div class="input-group mb-3">
+                <label class"label label-default">Displayed Entries:</label>
+                <select class="form-control" @onchange="changeView">
+
+                    <option value=3 selected>Three</option>
+                    <option value=4>Four</option>
+                    <option value=5>Five</option>
+                    <option value=6>Six</option>
+
+                </select>
+            </div>
+        </li>
+    </ul>
+</nav>
 
 <div class="modal fade" id="deletecustomer">
     <div class="modal-dialog">
@@ -132,8 +170,21 @@ else
 @functions {
     //Create a list with customer data but now is empty
     List<Customer> customerlist = new List<Customer>();
+    List<Customer> pageList = new List<Customer>();
+    int totalpages;
+
+    int pagesize { get; set; } = 3; //The default pagesize is 3
+
     HttpClient Http = new HttpClient(); //New httpClient obj
     protected Customer specific_cust = new Customer();
+
+
+    [Parameter]
+    public int paginationid { get; set; } = 1;
+
+
+
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -142,18 +193,74 @@ else
 
     private async Task RefreshCustomerList()
     {
+        System.Console.WriteLine(pagesize);
         //Create and send a Http request which return all the customers from the database!!
         //I use the completed url or I can use the /api/Customers
-        customerlist = await Http.GetJsonAsync<List<Customer>>("http://localhost:59918/api/Customers");
+        customerlist = await Http.GetJsonAsync<List<Customer>>("http://localhost:59918/api/Customers"); //The first call just to take all the entries and calculate the total pages!!
+        totalpages = (int)Math.Ceiling(customerlist.Count() / (double)pagesize); //Calculate total pages tha appeared in the customer tab
+        pageList = await Http.GetJsonAsync<List<Customer>>("http://localhost:59918/api/Customers/paged="+ paginationid + "/pagesize="+ pagesize); //The Http get request which include the page id and the page size!!
         StateHasChanged();
     }
 
-    //The function that when press the button on line 58 find the speicific customer and display the fields on the section with id deletecustomer 
+    //The function that when press the button on line 58 find the speicific customer and display the fields on the section with id deletecustomer
     protected void DeleteConfig(string ID)
     {
         specific_cust = customerlist.FirstOrDefault(x => x.Id == ID);
     }
 
+    //The function tha used when the user change the how many entries displayed in the customer tab!!By default we have the options 3,4,5,6!!
+    protected async Task changeView(ChangeEventArgs e)
+    {
+        pagesize = int.Parse(e.Value.ToString());
+   
+        await RefreshCustomerList();
+    }
+
+
+
+
+    
+
+
+    //The function that used when press the button for the previous page!!
+    protected async Task PreviousPage()
+    {
+        if(paginationid == 0)
+        {
+            // System.Console.WriteLine("edw");
+            await RefreshCustomerList();
+        }
+        else
+        {
+            paginationid -= 1;
+            System.Console.WriteLine(paginationid);
+            await RefreshCustomerList();
+
+        }
+        // System.Console.WriteLine("bainei edw");
+
+
+
+    }
+    //The function that used by the button next page!!
+    protected async Task NextPage()
+    {
+        System.Console.WriteLine(paginationid);
+
+        if (paginationid +1 == totalpages)
+        {
+            await RefreshCustomerList();
+        }
+        else
+        {
+
+            paginationid += 1;
+            // System.Console.WriteLine(paginationid);
+            await RefreshCustomerList();
+        }
+
+;
+    }
 
     //The function that called when confirm the deletion of this customer!!The function create a delete http request!!
     protected async Task DeleteCustomer(string customerid)

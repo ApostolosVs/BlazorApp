@@ -32,6 +32,15 @@ namespace BlazorApp.Controllers
             return _context.GetCustomers(); //When we send a get request we call the function GetCustomer from the CustomerServices class.
         }
 
+        [Route("paged={pageid}/pagesize={pagesize}")]
+        [HttpGet]
+        public IEnumerable<Customer> Get(int pageid,int pagesize) //The get request now receive two parameters the page id and the pagesize(how many entries displayed)
+        {
+
+
+            return _context.GetCustomers(pageid,pagesize); //When we send a get request we call the function GetCustomer from the CustomerServices class.
+        }
+
 
         //Now if we send get request with id parameter we have the below function:
         //Example is http://localhost<port>/api/Customers/1      (1 is the customer id)

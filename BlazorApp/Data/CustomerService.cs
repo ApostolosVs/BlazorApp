@@ -55,14 +55,30 @@ namespace BlazorApp.Data
                 throw;
             }
         }
-
-
         //The function which return the list with all customers that included in the database!
-        public  List<Customer> GetCustomers()
+        public List<Customer> GetCustomers()
         {
             try
             {
-                return  _cust.Find(Customer => true).ToList(); //For all the customers that find in the database create a list (ToList())
+                return _cust.Find(Customer => true).ToList(); //For all the customers that find in the database create a list (ToList())
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+
+
+
+        //The function which return the list with all customers that included in the database!
+        public List<Customer> GetCustomers(int pageid,int pagesize)
+        {
+            int entries = pageid * pagesize;
+            try
+            {
+                return  _cust.Find(Customer => true).Skip(entries).Limit(pagesize).ToList(); //For all the customers that find in the database create a list (ToList())
             }
             catch
             {
