@@ -14,9 +14,9 @@
     <div class="form-group row">
         <label class="control-label col-md-12">ID</label>
         <div class="col-md-4">
-            <input class="form-control" @bind="cust.Id" />
+            <input class="form-control" disabled value=@cust.Id />
         </div>
-       
+
     </div>
     <div class="form-group row">
         <label class="control-label col-md-12">Company Name</label>
@@ -85,7 +85,7 @@
     public Customer cust = new Customer(); //Create a customer obj
 
 
-    
+
     protected override async Task OnParametersSetAsync()
     {
         //If the customerid in the url included that mean that we are in the second functionallity (Edit)
@@ -96,29 +96,34 @@
             //and display in the above fields 
             cust = await Http.GetJsonAsync<Customer>("http://localhost:59918/api/Customers/" + customerid);
         }
+        else
+        {
+
+            Random random = new Random();
+            int num = random.Next(1000);
+            cust.Id = num.ToString();
+        }
     }
 
 
     //When the user press the button save (line 72) then we have:
     protected async Task SaveCustomer()
     {
-        System.Console.WriteLine("inserted in this function");
+
 
         //If url contain a customer id that mean that we have edit request
         if (string.IsNullOrEmpty(customerid))
         {
-            if (cust.Id != null) //If the customer id not null then we create http request in order to edit the customer
-            {
-                await Http.SendJsonAsync(HttpMethod.Post, "http://localhost:59918/api/Customers/", cust);
-            }
-            else
-            {
-                Cancel(); //If the customer id is null then we call the function cancel
-            }
+
+
+
+            await Http.SendJsonAsync(HttpMethod.Post, "http://localhost:59918/api/Customers/", cust);
+
 
         }
         else //but if the url not contained id that mean tha we refer to new customer an create them.
         {
+
             //Http put request in order to create the new customer
             await Http.SendJsonAsync(HttpMethod.Put, "http://localhost:59918/api/Customers/" + customerid, cust);
         }

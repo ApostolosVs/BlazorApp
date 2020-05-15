@@ -193,7 +193,7 @@ else
 
     private async Task RefreshCustomerList()
     {
-        System.Console.WriteLine(pagesize);
+       // System.Console.WriteLine(pagesize);
         //Create and send a Http request which return all the customers from the database!!
         //I use the completed url or I can use the /api/Customers
         customerlist = await Http.GetJsonAsync<List<Customer>>("http://localhost:59918/api/Customers"); //The first call just to take all the entries and calculate the total pages!!
